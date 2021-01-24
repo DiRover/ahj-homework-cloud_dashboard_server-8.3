@@ -1,0 +1,36 @@
+{
+  "name": "cloud_dashboard_server",
+  "version": "1.0.0",
+  "description": "ws sse server for cloud dashboard",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npm install",
+    "serve": "nodemon server.js",
+    "ws": "nodemon -w ./ server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DiRover/ahj-homework-cloud_dashboard_server-8.3.git"
+  },
+  "keywords": [
+    "ws",
+    "sse",
+    "server"
+  ],
+  "author": "Dmitriy Rovenskiy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DiRover/ahj-homework-cloud_dashboard_server-8.3/issues"
+  },
+  "homepage": "https://github.com/DiRover/ahj-homework-cloud_dashboard_server-8.3#readme",
+  "dependencies": {
+    "http-event-stream": "^0.2.0",
+    "koa": "^2.13.0",
+    "koa-body": "^4.2.0",
+    "koa-router": "^10.0.0",
+    "koa-static": "^5.0.0",
+    "nodemon": "^2.0.6",
+    "uuid": "^8.3.1",
+    "ws": "^7.3.1"
+  }
+}
