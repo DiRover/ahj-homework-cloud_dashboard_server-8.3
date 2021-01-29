@@ -2,8 +2,16 @@ const http = require('http');
 const Koa = require('koa');
 const Router = require('koa-router');
 const WS = require('ws');
-
 const app = new Koa();
+const { v4: uuidv4 } = require('uuid'); //Двоеточие показывает «что : куда идёт». В метод v4 объекта uuid сохраняется в переменную uuidv4
+let instances = []
+
+class Instance {
+  constructor (id, status) {
+    this.id = id;
+    this.status = status;
+  }
+};
 
 console.log('server is working');
 
@@ -57,14 +65,79 @@ const wsServer = new WS.Server({ server });
 
 wsServer.on('connection', (ws, req) => {
   ws.on('message', msg => {
+    const requset = JSON.parse(msg);
+    const id = requset.id;
+    console.log(requset);
+    if (requset.type === 'get list') {
+      console.log(instances);
+      const data = {type: 'list', list: instances};
+      const response = JSON.stringify(data);
+      ws.send(response);
+    } else if (requset.type === 'create') {
+      const id = uuidv4();
+      const instance = new Instance(id, 'Stopped');
+      instances.push(instance);
+      const data = {type: 'server info', id: id, msg: 'Received \"Create command\"'};
+      const response = JSON.stringify(data);
+      ws.send(response);
+      setTimeout(() => {
+        const data = {type: 'new instance', id: id, status: 'Stopped', msg: 'Created'};
+        const response = JSON.stringify(data);
+        ws.send(response);
+      }, 3000);
+    } else if (requset.type === 'play_arrow') {
+      instances.forEach((instance) => {
+        if (instance.id === id) {
+          instance.status = 'Running'
+        }
+      });
+      const data = {type: 'server info', id: id, msg: 'Received \"Start command\"'};
+      const response = JSON.stringify(data);
+      ws.send(response);
+      setTimeout(() => {
+        const data = {type: 'run', id: id, status: 'Running', msg: 'Started'};
+        const response = JSON.stringify(data);
+        ws.send(response);
+      }, 3000);
+    } else if (requset.type === 'pause') {
+      instances.forEach((instance) => {
+        if (instance.id === id) {
+          instance.status = 'Stopped';
+        }
+      });
+      const data = {type: 'server info', id: id, msg: 'Received \"Stop command\"'};
+      const response = JSON.stringify(data);
+      ws.send(response);
+      setTimeout(() => {
+        const data = {type: 'stop', id: id, status: 'Stopped', msg: 'Server stopped'};
+        const response = JSON.stringify(data);
+        ws.send(response);
+      }, 3000)
+    } else if (requset.type === 'clear') {
+      instances = instances.filter(instance => instance.id !== id);
+      const data = {type: 'server info', id: id, msg: 'Received \"Kill command\"'};
+      const response = JSON.stringify(data);
+      ws.send(response);
+      setTimeout(() => {
+        const data = {type: 'kill', id: id, status: 'Died', msg: 'Server deleted'};
+        const response = JSON.stringify(data);
+        ws.send(response);
+      }, 3000)
+    };
+    
+
+
+
     // console.log('msg');
     // ws.send('response');
+    /*
     [...wsServer.clients]
     .filter(o => o.readyState === WS.OPEN)
     .forEach(o => o.send('some message'));
+    */
   });
 
-  ws.send('welcome');
+  //ws.send('welcome');
 });
 
 server.listen(port);
