@@ -65,25 +65,25 @@ const wsServer = new WS.Server({ server });
 
 wsServer.on('connection', (ws, req) => {
   ws.on('message', msg => {
-    const requset = JSON.parse(msg);
-    const id = requset.id;
+    const requset = JSON.parse(msg);//парсим запрос
+    const id = requset.id;//записываем id сервера относительно которого пришёл запрос
     console.log(requset);
     if (requset.type === 'get list') {
-      console.log(instances);
+      console.log(instances); //отправляем список серверов
       const data = {type: 'list', list: instances};
       const response = JSON.stringify(data);
       ws.send(response);
     } else if (requset.type === 'create') {
-      const id = uuidv4();
-      const instance = new Instance(id, 'Stopped');
-      instances.push(instance);
+      const id = uuidv4();//создаём сервер и уникальным id
+      const instance = new Instance(id, 'Stopped');//новый сервер всегда остановлен
+      instances.push(instance);//записываем в массив серверов
       const data = {type: 'server info', id: id, msg: 'Received \"Create command\"'};
-      const response = JSON.stringify(data);
-      ws.send(response);
+      const response = JSON.stringify(data);//msg для сообщения в ворклог
+      sendResponse(response);//отправляем всем пользовотелям инфу о new/start/stop/kill сервере
       setTimeout(() => {
         const data = {type: 'new instance', id: id, status: 'Stopped', msg: 'Created'};
         const response = JSON.stringify(data);
-        ws.send(response);
+        sendResponse(response);//отправляем всем пользовотелям инфу о new/start/stop/kill сервере
       }, 3000);
     } else if (requset.type === 'play_arrow') {
       instances.forEach((instance) => {
@@ -93,11 +93,11 @@ wsServer.on('connection', (ws, req) => {
       });
       const data = {type: 'server info', id: id, msg: 'Received \"Start command\"'};
       const response = JSON.stringify(data);
-      ws.send(response);
+      sendResponse(response);//отправляем всем пользовотелям инфу о new/start/stop/kill сервере
       setTimeout(() => {
         const data = {type: 'run', id: id, status: 'Running', msg: 'Started'};
         const response = JSON.stringify(data);
-        ws.send(response);
+        sendResponse(response);//отправляем всем пользовотелям инфу о new/start/stop/kill сервере
       }, 3000);
     } else if (requset.type === 'pause') {
       instances.forEach((instance) => {
@@ -107,37 +107,30 @@ wsServer.on('connection', (ws, req) => {
       });
       const data = {type: 'server info', id: id, msg: 'Received \"Stop command\"'};
       const response = JSON.stringify(data);
-      ws.send(response);
+      sendResponse(response);//отправляем всем пользовотелям инфу о new/start/stop/kill сервере
       setTimeout(() => {
         const data = {type: 'stop', id: id, status: 'Stopped', msg: 'Server stopped'};
         const response = JSON.stringify(data);
-        ws.send(response);
+        sendResponse(response);//отправляем всем пользовотелям инфу о new/start/stop/kill сервере
       }, 3000)
     } else if (requset.type === 'clear') {
       instances = instances.filter(instance => instance.id !== id);
       const data = {type: 'server info', id: id, msg: 'Received \"Kill command\"'};
       const response = JSON.stringify(data);
-      ws.send(response);
+      sendResponse(response);//отправляем всем пользовотелям инфу о new/start/stop/kill сервере
       setTimeout(() => {
         const data = {type: 'kill', id: id, status: 'Died', msg: 'Server deleted'};
         const response = JSON.stringify(data);
-        ws.send(response);
+        sendResponse(response);
       }, 3000)
     };
-    
-
-
-
-    // console.log('msg');
-    // ws.send('response');
-    /*
-    [...wsServer.clients]
-    .filter(o => o.readyState === WS.OPEN)
-    .forEach(o => o.send('some message'));
-    */
   });
-
-  //ws.send('welcome');
 });
+
+function sendResponse(response) { //функция для отправки сообщения всем пользователям
+  [...wsServer.clients]
+    .filter(channel => channel.readyState === WS.OPEN)
+    .forEach(channel => {channel.send(response)});
+}
 
 server.listen(port);
